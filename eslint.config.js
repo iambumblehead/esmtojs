@@ -42,7 +42,6 @@ export default [
       "object-curly-newline": 0,
       "nonblock-statement-body-position": 0,
       "arrow-parens": [2, "as-needed"],
-      "space-before-function-paren": [2, "always"],
       "function-paren-newline": 0,
       "consistent-return": 0,
       "array-callback-return": 0,
@@ -50,18 +49,16 @@ export default [
       "curly": 0,
       "operator-linebreak": 0,
       "no-param-reassign": 0,
-      "key-spacing": [2, {"beforeColon": true}],
       "implicit-arrow-linebreak": 0,
       "no-shadow": [0, "warn", {
         "allow": [ "err" ]
-      }
-                   ],
+      }],
       "prefer-arrow-callback": [2, {
         "allowNamedFunctions": true
       }],
       "no-return-assign": 0,
       "no-nested-ternary": 0,
-      "array-bracket-spacing": [2, "always"],
+      "array-bracket-spacing": [0, "always"],
       "prefer-destructuring": 2,
       "class-methods-use-this": 0,
       "no-confusing-arrow": 0

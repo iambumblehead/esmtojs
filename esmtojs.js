@@ -7,14 +7,20 @@ const reDEFAULTAS = /[ \t\n\r]?(default)[ \t\n\r](as)/
 const reNAMEDAS = /[ \t\n\r]?([^ \t\n\r]*)[ \t\n\r](as)/
 const reNAMEDASGROUP = /([^ \t\n\r]*)[ \t\n\r](as)[ \t\n\r]([^ \t\n\r]*)/
 // const reMIXEDNAMEDDEFAULT = /({[^}*]})([ \t\n\r,]*)?(.*)/
+// eslint-disable-next-line max-len
 // const reMIXEDNAMEDDEFAULT = /([ \t\n\r,]*)?([ \t\n\r,]*)?({[^}*]})([ \t\n\r,]*)?([ \t\n\r,]*)?/
 const reMIXEDDEFAULTNAMED = /^([^ \t\n\r,{]*)([ \t\n\r,]*)({[^}]*})/
 const reMIXEDNAMEDDEFAULT = /^({[^}]*})([ \t\n\r,]*)([^ \t\n\r,}]*)/
 
+// eslint-disable-next-line max-len
 // const reMIXEDDEFAULTGLOBBED = /^([^ \t\n\r,{]*)([ \t\n\r,]*)( as[ \t\n\r,]*)([^ \t\n\r]*)/
+// eslint-disable-next-line max-len
 // const reMIXEDDEFAULTGLOBBED = /^([^ \t\n\r,{]*)([ \t\n\r,]*)(\*|{[^}]*})( as[ \t\n\r,]*)([^ \t\n\r]*)/
+// eslint-disable-next-line max-len
 const reMIXEDDEFAULTGLOBBED = /^([^ \t\n\r,{]*)([ \t\n\r,]*)(\*|{[^}]*})( as[ \t\n\r,]*)([^ \t\n\r]*)/
+// eslint-disable-next-line max-len
 // const reMIXEDDEFAULTGLOBBED = /^([\w]*)([ \t\n\r,]*)(\*|{[^}]*})( as[ \t\n\r,]*)([^ \t\n\r]*)/
+// eslint-disable-next-line max-len
 const reMIXEDGLOBBEDDEFAULT = /^([ \t\n\r,]*)(\*|{[^}]*})( as[ \t\n\r]*)([^,]*),[ \t\n\r,]?([^ \t\n\r]*)/
 
 const closuretpl = `let :name = (esmtojs => {
@@ -41,11 +47,12 @@ export default (esmstr, name, importmap, jsstr) => {
 
   jsstr = Object.keys(importmap).reduce((str, key) => {
     const re = buildImportReplaceRe(key)
-    return str.replace(re, (match, g1, g2, g3, g4) => {
+    return str.replace(re, (match, g1, g2, g3) => {
       // 'optional use stringy or object',
       // console.log({ match, g1, g2, g3, g4 })
       if (g1 === enumKeywordIMPORT) {
         if (String(g2).endsWith('}') && !String(g2).startsWith('{')) {
+          // eslint-disable-next-line max-len
           // match: 'import defaultExport09, { export091, export092 } from "module-name-09"',
           // g1: 'import',
           // g2: 'defaultExport09, { export091, export092 }',
@@ -60,6 +67,7 @@ export default (esmstr, name, importmap, jsstr) => {
           return match
         }
         else if (!String(g2).endsWith('}') && String(g2).startsWith('{')) {
+          // eslint-disable-next-line max-len
           // match: 'import defaultExport09 { export091, export092 }, defaultExport09 from "module-name-09"',
           // g1: 'import',
           // g2: 'defaultExport09, { export091, export092 }',
@@ -83,6 +91,7 @@ export default (esmstr, name, importmap, jsstr) => {
             // const { default: alias05 } = testA.all;
             match = match
               .replace(g3, `${importmap[key]}.all`)
+            // eslint-disable-next-line max-len
             match = match.replace(g2, g2.replace(reNAMEDASGROUP, (m, n1, n2, n3) => {
               return `${n1}: ${n3}`
             }))
@@ -98,6 +107,7 @@ export default (esmstr, name, importmap, jsstr) => {
             // const { alias04: export04 } = testA.named;
             match = match
               .replace(g3, `${importmap[key]}.named`)
+            // eslint-disable-next-line max-len
             match = match.replace(g2, g2.replace(reNAMEDASGROUP, (m, n1, n2, n3) => {
               return `${n1}: ${n3}`
             }))
@@ -132,6 +142,7 @@ export default (esmstr, name, importmap, jsstr) => {
 
         else if (reGlobAS.test(g2)) {
           if (g2.startsWith('*') && reMIXEDGLOBBEDDEFAULT.test(g2)) {
+            // eslint-disable-next-line max-len
             // match: 'import * as name10a, defaultExport10a from "module-name-10a";',
             // g1: 'import',
             // g2: '"module-name-10a"',
@@ -140,6 +151,7 @@ export default (esmstr, name, importmap, jsstr) => {
             // return,
             // const defaultExport09a = testA.all.default
             // const name10a = testA.named;
+            // eslint-disable-next-line max-len
             match = g2.replace(reMIXEDGLOBBEDDEFAULT, (m, h1, h2, h3, mnamed, mdefault) => {
               return [
                 `const ${mdefault} = ${importmap[key]}.all.default`,
@@ -149,6 +161,7 @@ export default (esmstr, name, importmap, jsstr) => {
 
             return match          
           } else if (!g2.startsWith('*') && reMIXEDDEFAULTGLOBBED.test(g2)) {
+            // eslint-disable-next-line max-len
             // match: 'import defaultExport10a, * as name10a from "module-name-10a";',
             // g1: 'import',
             // g2: 'defaultExport10a, * as name10a',
@@ -156,7 +169,8 @@ export default (esmstr, name, importmap, jsstr) => {
             //
             // return,
             // const defaultExport09a = testA.all.default
-            // const name10a = testA.named;            
+            // const name10a = testA.named;
+            // eslint-disable-next-line max-len
             match = g2.replace(reMIXEDDEFAULTGLOBBED, (m, mdefault, h2, h3, h4, mnamed) => {
               return [
                 `const ${mdefault} = ${importmap[key]}.all.default`,

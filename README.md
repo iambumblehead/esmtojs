@@ -4,7 +4,9 @@ esmtojs
 
 [![npm version](https://badge.fury.io/js/esmtojs.svg)](https://badge.fury.io/js/esmtojs) [![Build Status](https://github.com/iambumblehead/esmtojs/workflows/test/badge.svg)][2]
 
-Returns a vanilla js expression from an esm file string. No transpiler or dependencies are used. Resulting expressions can be used in ways prohibited by esm format.
+Returns a vanilla js expression from an esm file string, so that resulting expressions can be used in ways prohibited by esm format.
+
+Ths script uses regular expressions. This reduces accuracy but keeps the script small and independant of any dependency that could be a moving target.
 
 Warning: transforming esm format requires many decisions that are at once complex, subjective and consequential.
 ```javascript
