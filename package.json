@@ -1,0 +1,38 @@
+{
+  "name": "esmtojs",
+  "type": "module",
+  "module": "esmtojs.js",
+  "exports": {
+    "import": "./esmtojs.js"
+  },
+  "version": "0.0.1",
+  "description": "Convert esm fil to vanilla js expression",
+  "author": "Chris <chris@bumblehead.com>",
+  "license": "MIT",
+  "readmeFilename": "README.md",
+  "files": [
+    "esmtojs.js",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/iambumblehead/esmtojs.git"
+  },
+  "keywords": [
+    "commonjs",
+    "cjs",
+    "es-module",
+    "transpile",
+    "compile",
+    "esm",
+    "module"
+  ],
+  "devDependencies": {
+    "eslint": "^9.1.1"
+  },
+  "scripts": {
+    "test": "node --test",
+    "lint": "eslint *.js",
+    "prepublishOnly": "npm run lint && npm test"
+  }
+}
