@@ -59,7 +59,7 @@ export default [
       "no-return-assign": 0,
       "no-nested-ternary": 0,
       "array-bracket-spacing": [0, "always"],
-      "prefer-destructuring": 2,
+      "prefer-destructuring": ["error", {"object": false, "array": false}],
       "class-methods-use-this": 0,
       "no-confusing-arrow": 0
     }

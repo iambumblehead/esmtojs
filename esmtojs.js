@@ -1,7 +1,10 @@
 const enumKeywordIMPORT = 'import'
+const enumKeywordEXPORT = 'export'
 
+const reKeywordAS = /[ \t\n\r]as[ \t\n\r]/
 const reKeywordFROM = /(?:[ \t\n\r])(from)(?:[ \t\n\r])/
 const reSpacesANY = /[ \t\n\r]/
+// const reGlobFROM = /[ \t\n\r]?\*[ \t\n\r]from[ \t\n\r]/
 const reGlobAS = /[ \t\n\r]?\*[ \t\n\r](as)/
 const reDEFAULTAS = /[ \t\n\r]?(default)[ \t\n\r](as)/
 const reNAMEDAS = /[ \t\n\r]?([^ \t\n\r]*)[ \t\n\r](as)/
@@ -23,10 +26,73 @@ const reMIXEDDEFAULTGLOBBED = /^([^ \t\n\r,{]*)([ \t\n\r,]*)(\*|{[^}]*})( as[ \t
 // eslint-disable-next-line max-len
 const reMIXEDGLOBBEDDEFAULT = /^([ \t\n\r,]*)(\*|{[^}]*})( as[ \t\n\r]*)([^,]*),[ \t\n\r,]?([^ \t\n\r]*)/
 
+// https://github.com/flex-development/export-regex
+const EXPORT_DECLARATION_REGEX = // eslint-disable-next-line
+  /(?<=^|[\n;](?:[\t ]*(?:\w+ )?)?)export\s*(?<modifiers>(?:\s*declare|\s*abstract|\s*async)+)?\s*(?<declaration>class|const +enum|const|enum|function\*?|interface|let|namespace|type(?! *\{)|var)\s+(?<exports>(?:[$_\p{ID_Start}][$\u200C\u200D\p{ID_Continue}]*(?=[\s=:;/({])(?!.*?,))|(?:[\w\t\n\r .,:$'"=-]+)|(?:[{[][\w\t\n\r .,:$'"-]+[}\]]))(?:\s*=\s*[$_\p{ID_Start}][$\u200C\u200D\p{ID_Continue}]*)?/gu
+const EXPORT_LIST_REGEX = // eslint-disable-next-line
+  /(?<=^[\t ]*|[\n;](?:[\t ]*(?:\w+ )?)?)export(?:(?:\s+(?<type>type)\s*)|\s*)(?<exports>{[\w\t\n\r "$'*,./-]*?})(?=[\t\n ;](?!from)|$)/g
+const EXPORT_AGGREGATE_REGEX = // eslint-disable-next-line
+  /(?<=^[\t ]*|[\n;](?:[\t ]*(?:\w+ )?)?)export(?:(?: *(?<type>type) *)|[\t\n ]*)(?<exports>(?:\*(?: +as +\S+)?)|\S+|(?:{[\w\t\n\r "$'*,./-]+?}))[\t ]*from[\t ]*["']\s*(?<specifier>(?:(?<=' *)[^']*[^\s'](?= *'))|(?:(?<=" *)[^"]*[^\s"](?= *"))) *["']/g
+
 const closuretpl = `let :name = (esmtojs => {
 :filestr
+:esmtojsexports
 Object.assign(esmtojs.all, esmtojs.named)
 })({all:{},named:{}})`
+
+const reEmbedString = /('[^']*'|"[^"]*")/
+const reLiteralLikeness = /^\w*:\w*$/
+const parseWord = str => {
+  // 'hello', "hello"
+  const embstr = (str.match(reEmbedString) || [])[0]
+
+  return embstr
+    ? embstr
+    : str.replace(/[^\w]/g, '')
+}
+
+// '{ variable1 as name1' => name1:variable1
+const convertLikenessAsToLiteral = aspat => {
+  // [ '{ variable1', 'name1' ]
+  const namedef = aspat.split(reKeywordAS)
+  // 'name1:variable1'
+  return `${parseWord(namedef[1])}:${parseWord(namedef[0])}`
+}
+
+// ' name2 = 2' => name2
+// ' name2: bar } => name2
+// '{ name1', => name1
+const convertLikenessDefToName = pat => (
+  pat
+    .replace(/([ \t\n\r]*)?[:=].*/, '')
+    .replace(/[^\w]/g, '')
+    .trim())
+
+const declarationnamesparse = names => (
+  // possible inaccuracies
+  // strip everything that exists after '=' and before ',}'
+
+  // namesre = /[^=]([ \t\n\r]*)?(\w*)([ \t\n\r]*)?=?/g,
+  names.split(',').reduce((parsed, nregion) => {
+    // ' name2 = 2' => name2
+    // ' name2: bar } => name2
+    // '{ name1', => name1
+    const possiblename = (
+      reKeywordAS.test(nregion)
+        ? convertLikenessAsToLiteral(nregion)
+        : convertLikenessDefToName(nregion))
+
+    // if its not a word discard it
+    if (/[^\w]/.test(possiblename) &&
+        !reEmbedString.test(possiblename) &&
+        !reLiteralLikeness.test(possiblename)) {
+      return parsed
+    }
+
+    parsed.push(possiblename)
+
+    return parsed
+  }, []))
 
 export const buildImportReplaceRe = key => (
   key = key.replace('/', '\\/').replace('.', '\\.'),
@@ -45,11 +111,47 @@ export default (esmstr, name, importmap, jsstr) => {
   jsstr = jsstr.replace(
     /export default/g, 'esmtojs.all.default =')
 
-  jsstr = Object.keys(importmap).reduce((str, key) => {
+  const exports = []
+  // Aggregating modules
+  // export * from "module-name";
+  // export * as name1 from "module-name";
+  // export { name1, nameN } from "module-name";
+  // export { import1 as name1, import2 as name2, nameN } from "module-name";
+  // export { default, named } from "module-name";
+  // export { default as name1 } from "module-name";
+  jsstr = jsstr.replace(EXPORT_AGGREGATE_REGEX, (m, h1, expnames, mId) => {
+    const moduleId = importmap[mId]
+    
+    // export * from "module-name";
+    if (expnames === '*') {
+      exports.push(`Object.assign(esmtojs.named, ${moduleId}.named)`)
+    } else if (reGlobAS.test(expnames)) {
+      const name = parseWord(expnames.replace(reGlobAS, ''))
+      exports.push(`Object.assign(esmtojs.named, {${name}:${moduleId}.named})`)
+    } else {
+      declarationnamesparse(expnames).forEach(expname => {
+        if (/:/.test(expname)) {
+          const expnames = expname.split(':')
+          const ns = expnames[0] === 'default' ? `all` : `named`
+          const assign = `{${expnames[0]}:${moduleId}.all.${expnames[1]}}`
+
+          exports.push(`Object.assign(esmtojs.${ns}, ${assign})`)
+        } else {
+          const ns = expname === 'default' ? `all` : `named`
+          const assign = `{${expname}:${moduleId}.all.${expname}}`
+
+          exports.push(`Object.assign(esmtojs.${ns}, ${assign})`)
+        }
+      })
+    }
+
+    return '0'
+  })
+  
+  jsstr = Object.keys(importmap).reduce((str, key) => {    
     const re = buildImportReplaceRe(key)
     return str.replace(re, (match, g1, g2, g3) => {
       // 'optional use stringy or object',
-      // console.log({ match, g1, g2, g3, g4 })
       if (g1 === enumKeywordIMPORT) {
         if (String(g2).endsWith('}') && !String(g2).startsWith('{')) {
           // eslint-disable-next-line max-len
@@ -68,9 +170,9 @@ export default (esmstr, name, importmap, jsstr) => {
         }
         else if (!String(g2).endsWith('}') && String(g2).startsWith('{')) {
           // eslint-disable-next-line max-len
-          // match: 'import defaultExport09 { export091, export092 }, defaultExport09 from "module-name-09"',
+          // match: 'import defexp9 { export091, export092 }, defexp9 from "module-name-09"',
           // g1: 'import',
-          // g2: 'defaultExport09, { export091, export092 }',
+          // g2: 'defexp9, { export091, export092 }',
           // g3: '"module-name-09"'
           match = g2.replace(reMIXEDNAMEDDEFAULT, (m, mnamed, a2, mdefault) => {
             return [
@@ -191,10 +293,34 @@ export default (esmstr, name, importmap, jsstr) => {
 
         return 'const' + match.slice(enumKeywordIMPORT.length)
       }
-
-      // return match.replace(g3, `'${importmap[key]}'`)
     })
   }, jsstr)
+  
+  jsstr = jsstr.replace(EXPORT_DECLARATION_REGEX, (m, h1, mdectype, mnames) => {
+    const namesparsed = (mnames && !/[^\w]/.test(mnames))
+      ? [mnames]
+      : declarationnamesparse(mnames)
+
+    m = m.slice(enumKeywordEXPORT.length + 1)
+    exports.push(`Object.assign(esmtojs.named, {${namesparsed}})`)
+
+    return m
+  })
+
+  jsstr = jsstr.replace(EXPORT_LIST_REGEX, (m, h1, mnames) => {
+    const namesparsed = (mnames && !/[^\w]/.test(mnames))
+      ? [mnames]
+      : declarationnamesparse(mnames)
+
+    exports.push(`Object.assign(esmtojs.named, {${namesparsed}})`)
+    
+    return '0'
+  })
+
+  jsstr = jsstr.replace(/:esmtojsexports/, (
+    exports.length
+      ? exports.join('\n')
+      : ''))
 
   return jsstr
 }
