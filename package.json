@@ -8,7 +8,7 @@
   "version": "0.0.1",
   "description": "Convert esm fil to vanilla js expression",
   "author": "Chris <chris@bumblehead.com>",
-  "license": "MIT",
+  "license": "MIT BSD-3-Clause",
   "readmeFilename": "README.md",
   "files": [
     "esmtojs.js",

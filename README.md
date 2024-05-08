@@ -2,13 +2,15 @@ esmtojs
 =======
 **(c)[Bumblehead][0]**
 
-[![npm version](https://badge.fury.io/js/esmtojs.svg)](https://badge.fury.io/js/esmtojs) [![Build Status](https://github.com/iambumblehead/esmtojs/workflows/test/badge.svg)][2]
+[![npm version](https://badge.fury.io/js/esmtojs.svg)](https://badge.fury.io/js/esmtojs) [Build Status](https://github.com/iambumblehead/esmtojs/workflows/test/badge.svg)
 
 Returns a vanilla js expression from an esm file string, so that resulting expressions can be used in ways prohibited by esm format.
 
-Ths script uses regular expressions. This reduces accuracy but keeps the script small and independant of any dependency that could be a moving target.
+This script uses regular expressions, an approach that can reduce accuracy but has benefits: keeps the script small and easier to fork and keeps away dependencies that would cause possible churn. Example import and export patterns from mozilla MDN are handled correctly by tests added here.
 
-Warning: transforming esm format requires many decisions that are at once complex, subjective and consequential.
+> [!NOTE]
+> Thank you https://github.com/flex-development/export-regex for establishing a few of the important regular expressions pasted and used here. Those RegExps reduced the time needed to write this package. They are greatly appreciated.
+
 ```javascript
 import esmtojs from 'esmtojs'
 
