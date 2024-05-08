@@ -11,7 +11,6 @@ This script uses regular expressions, an approach that can reduce accuracy but h
 > [!NOTE]
 > Thank you https://github.com/flex-development/export-regex for establishing a few of the important regular expressions pasted and used here. Those RegExps reduced the time needed to write this package. They are greatly appreciated.
 
-Warning: decomposing esm format requires many decisions at once complex, subjective and consequential.
 ```javascript
 import esmtojs from 'esmtojs'
 
