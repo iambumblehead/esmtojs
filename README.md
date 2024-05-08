@@ -6,7 +6,10 @@ esmtojs
 
 Returns a vanilla js expression from an esm file string, so that resulting expressions can be used in ways prohibited by esm format.
 
-Ths script uses regular expressions. This reduces accuracy but keeps the script small and independant of any dependency that could be a moving target.
+Ths script uses regular expressions. This does reduce accuracy but keeps the script small, easier to fork and free from dependencies that might cause churn. Example import and export patterns from mozilla MDN are used for the initial tests here.
+
+> [!NOTE]
+> Thank you https://github.com/flex-development/export-regex for establishing a few of the important regular expressions pasted and used here. Those RegExps reduced the time needed to write this package and without them, this package may not have been written.
 
 Warning: transforming esm format requires many decisions that are at once complex, subjective and consequential.
 ```javascript
