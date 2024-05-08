@@ -2,7 +2,7 @@ esmtojs
 =======
 **(c)[Bumblehead][0]**
 
-[![npm version](https://badge.fury.io/js/esmtojs.svg)](https://badge.fury.io/js/esmtojs) [Build Status](https://github.com/iambumblehead/esmtojs/workflows/test/badge.svg)
+[![npm version](https://badge.fury.io/js/esmtojs.svg)] [![test](https://github.com/iambumblehead/esmtojs/workflows/test/badge.svg)]
 
 Returns a vanilla js expression from an esm file string, so that resulting expressions can be used in ways prohibited by esm format.
 
